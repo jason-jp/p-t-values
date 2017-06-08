@@ -1,0 +1,80 @@
+-- Conversion: T Value -> Range of P Values
+
+-- After we compute the t value for each variable in a predictive model, we can figure out the corresponding range of p values
+-- Pre-requisite: both groups (*) have a sample size much larger than 120
+-- (*) In the example below, one group has sales_flag 0 while the other group has sales_flag 1.
+
+-- Note #1: In the example below, the table "sales_table" has the sales data of each ID.
+-- Note #2: In the example below, the table "variable_table" has the variables' values of each ID.
+
+-- Instruction: The code below computes for M (any integer) variables, so please adjust the code accordingly.
+
+select
+case when abs(t_tab.t1) > 3.291 then '< 0.001' when abs(t_tab.t1) between 3.090 and 3.291 then '0.001 - 0.002' when abs(t_tab.t1) between 2.807 and 3.090 then '0.002 - 0.005' when abs(t_tab.t1) between 2.576 and 2.807 then '0.005 - 0.01' when abs(t_tab.t1) between 2.326 and 2.576 then '0.01 - 0.02' when abs(t_tab.t1) between 1.960 and 2.326 then '0.02 - 0.05' when abs(t_tab.t1) between 1.645 and 1.960 then '0.05 - 0.10' when abs(t_tab.t1) between 1.282 and 1.645 then '0.10 - 0.20' when abs(t_tab.t1) between 1.036 and 1.282 then '0.20 - 0.30' when abs(t_tab.t1) between 0.842 and 1.036 then '0.30 - 0.40' when abs(t_tab.t1) between 0.674 and 0.842 then '0.40 - 0.50' when abs(t_tab.t1) < 0.674 then '> 0.50' as p1
+
+, case when abs(t_tab.t2) > 3.291 then '< 0.001' when abs(t_tab.t2) between 3.090 and 3.291 then '0.001 - 0.002' when abs(t_tab.t2) between 2.807 and 3.090 then '0.002 - 0.005' when abs(t_tab.t2) between 2.576 and 2.807 then '0.005 - 0.01' when abs(t_tab.t2) between 2.326 and 2.576 then '0.01 - 0.02' when abs(t_tab.t2) between 1.960 and 2.326 then '0.02 - 0.05' when abs(t_tab.t2) between 1.645 and 1.960 then '0.05 - 0.10' when abs(t_tab.t2) between 1.282 and 1.645 then '0.10 - 0.20' when abs(t_tab.t2) between 1.036 and 1.282 then '0.20 - 0.30' when abs(t_tab.t2) between 0.842 and 1.036 then '0.30 - 0.40' when abs(t_tab.t2) between 0.674 and 0.842 then '0.40 - 0.50' when abs(t_tab.t2) < 0.674 then '> 0.50' as p2
+
+...
+, case when abs(t_tab.tM) > 3.291 then '< 0.001' when abs(t_tab.tM) between 3.090 and 3.291 then '0.001 - 0.002' when abs(t_tab.tM) between 2.807 and 3.090 then '0.002 - 0.005' when abs(t_tab.tM) between 2.576 and 2.807 then '0.005 - 0.01' when abs(t_tab.tM) between 2.326 and 2.576 then '0.01 - 0.02' when abs(t_tab.tM) between 1.960 and 2.326 then '0.02 - 0.05' when abs(t_tab.tM) between 1.645 and 1.960 then '0.05 - 0.10' when abs(t_tab.tM) between 1.282 and 1.645 then '0.10 - 0.20' when abs(t_tab.tM) between 1.036 and 1.282 then '0.20 - 0.30' when abs(t_tab.tM) between 0.842 and 1.036 then '0.30 - 0.40' when abs(t_tab.tM) between 0.674 and 0.842 then '0.40 - 0.50' when abs(t_tab.tM) < 0.674 then '> 0.50' as pM
+from
+(
+case when sqrt(((z0.c1^2)/n0)+((z1.d1^2)/n1)) = 0 then (z0.a1 - z1.b1)/sqrt(((z0.c1^2)/n0)+((z1.d1^2)/n1)) end as t1
+
+, case when sqrt(((z0.c2^2)/n0)+((z1.d2^2)/n1)) = 0 then (z0.a2 - z1.b2)/sqrt(((z0.c2^2)/n0)+((z1.d2^2)/n1)) end as t2
+
+...
+, case when sqrt(((z0.cM^2)/n0)+((z1.dM^2)/n1)) = 0 then (z0.aM - z1.bM)/sqrt(((z0.cM^2)/n0)+((z1.dM^2)/n1)) end as tM
+
+from
+(
+select
+avg(b.var1)			as a1
+
+, avg(b.var2) 		as a2
+
+...
+, avg(b.varM) 		as aM
+
+, stddev(b.var1)	as c1
+
+, stddev(b.var2)	as c2
+
+...
+, stddev(b.varM)	as cM
+
+, count(*)			as n0
+from
+sales_table a
+inner join variable_table b
+on a.id_no = b.id_no
+where
+a.sales_flag = 0
+) z0
+,
+(
+select
+avg(b.var1)			as b1
+
+, avg(b.var2) 		as b2
+
+...
+, avg(b.varM) 		as bM
+
+, stddev(b.var1)	as d1
+
+, stddev(b.var2)	as d2
+
+...
+, stddev(b.varM)	as dM
+
+, count(*)			as n1
+from
+sales_table a
+inner join variable_table b
+on a.id_no = b.id_no
+where
+a.sales_flag = 1
+) z1
+) t_tab
+;
+
